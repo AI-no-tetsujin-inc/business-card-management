@@ -75,7 +75,15 @@ uploadApi.post("/:token/finish", async (c) => {
     );
   }
   if (!stmts.length) return c.json({ error: "表面の画像がありません" }, 400);
-  stmts.push(c.env.DB.prepare("UPDATE upload_links SET used_at = ? WHERE token_hash = ?").bind(at, link.token_hash));
+  // Claim the capability atomically before any image write. A concurrent request
+  // that passed validLink must not be able to complete a second time.
+  // Fail closed: if the following batch fails, issue a new link instead of
+  // restoring this token and reopening the replay window.
+  const claimed = await c.env.DB
+    .prepare("UPDATE upload_links SET used_at = ? WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?")
+    .bind(at, link.token_hash, Date.now())
+    .run();
+  if (claimed.meta.changes !== 1) return c.json({ error: "このリンクは期限切れか、すでに使われています" }, 404);
   await c.env.DB.batch(stmts);
   await audit(c.env.DB, { userId: link.user_id, via: "web", action: "upload_image", targetType: "card", targetId: link.card_id });
   return c.json({ ok: true });
