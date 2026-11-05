@@ -1,3 +1,4 @@
+import { updateUserAccess } from "./user-access";
 import { Hono } from "hono";
 import { checkGoogle } from "./google";
 import { getLink, removeLink } from "./google-link";
@@ -709,10 +710,10 @@ api.post("/admin/users/:id", async (c) => {
   if (id === me.id && (b.active === false || (b.role && b.role !== "admin"))) {
     return c.json({ error: "自分自身の権限は変更できません" }, 400);
   }
+  if (b.active !== undefined && typeof b.active !== "boolean") return c.json({ error: "有効状態は真偽値で指定してください" }, 400);
   if (b.role && !["admin", "member", "viewer"].includes(b.role)) return c.json({ error: "権限が不正です" }, 400);
-  if (b.role) await c.env.DB.prepare("UPDATE users SET role = ? WHERE id = ?").bind(b.role, id).run();
+  await updateUserAccess(c.env.DB, id, b);
   if (b.active !== undefined) {
-    await c.env.DB.prepare("UPDATE users SET active = ? WHERE id = ?").bind(b.active ? 1 : 0, id).run();
     if (!b.active) {
       // 無効化: ログイン状態と ChatGPT / Claude との連携をすべて切る
       await c.env.DB.prepare("DELETE FROM sessions WHERE user_id = ?").bind(id).run();
