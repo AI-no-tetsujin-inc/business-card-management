@@ -1,0 +1,15 @@
+# ローカル開発用（.dev.vars にコピーして使う。.dev.vars は Git に入れない）
+ANTHROPIC_API_KEY=
+# 組織全体用のキー（スコープ: 組織）を使うときだけ、ワークスペースの ID（wrkspc_…）
+ANTHROPIC_WORKSPACE_ID=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+# 1 にすると localhost でだけ「開発用ログイン」が使える（本番では絶対に設定しない）
+DEV_LOGIN=1
+# Google Chat の Incoming Webhook URL（通知先スペース）
+GOOGLE_CHAT_WEBHOOK_URL=
+# 議事録用の Google Chat スペースの Webhook（未設定なら上のスペースに送る）
+GOOGLE_CHAT_MINUTES_WEBHOOK_URL=
+# 議事録の取り込み: サービスアカウントの JSON キー（1行で）と、取り込み用フォルダの ID
+GOOGLE_SERVICE_ACCOUNT_JSON=
+DRIVE_FOLDER_ID=

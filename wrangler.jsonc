@@ -1,0 +1,45 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "meishi",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/auth/*", "/upload-api/*", "/mcp", "/mcp/*", "/authorize", "/oauth/*", "/.well-known/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "meishi",
+      // `wrangler d1 create meishi` で発行された ID に置き換える
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // 請求書・見積書の PDF 作成（Browser Run。無料枠は1日10分）
+  "browser": { "binding": "BROWSER" },
+  "kv_namespaces": [
+    {
+      // MCP（ChatGPT / Claude 連携）の許可・トークン。`wrangler kv namespace create OAUTH_KV` の ID に置き換える
+      "binding": "OAUTH_KV",
+      "id": "00000000000000000000000000000000"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "meishi-images"
+    }
+  ],
+  "vars": {
+    "ALLOWED_DOMAIN": "ainotetsujin.com"
+  },
+  // 独自ドメインの DNS を Cloudflare に移したらコメントを外す
+  // "routes": [{ "pattern": "meishi.ainotetsujin.com", "custom_domain": true }],
+  // 議事録の取り込み（分割・抽出・保存をステップごとに自動でやり直す）
+  "workflows": [{ "name": "meishi-minutes", "binding": "MINUTES_WORKFLOW", "class_name": "MinutesWorkflow" }],
+  // 毎時0分（日本時間9時に日次の通知、毎時に議事録の取り込み）
+  "triggers": { "crons": ["0 * * * *"] },
+  "observability": { "enabled": true }
+}
